@@ -3,7 +3,7 @@
 import json
 import platform
 import sys
-from typing import List
+from typing import Any, Dict, List, Optional
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool, Resource, ResourceTemplate, Prompt
@@ -254,7 +254,26 @@ Search Syntax Guide:
                 else:
                     raise ValueError("'windows_params' must be a string or dictionary")
 
-            # Combine parameters
+            # Merge top-level shorthand fields into base params when present.
+            # This allows callers to send either {"base": {...}} or a flat
+            # shorthand like {"query": "*.py", "max_results": 50}.
+            allowed_top_keys = (
+                'query', 'max_results', 'match_path', 'match_case',
+                'match_whole_word', 'match_regex', 'sort_by',
+                'mac_params', 'linux_params'
+            )
+            for k in allowed_top_keys:
+                if k in arguments and k not in base_params:
+                    v = arguments[k]
+                    # parse JSON-encoded strings for non-query fields
+                    if isinstance(v, str) and k != 'query':
+                        try:
+                            v = json.loads(v)
+                        except json.JSONDecodeError:
+                            pass
+                    base_params[k] = v
+
+            # Combine parameters (base_params now contains merged values)
             query_params = {
                 **base_params,
                 'windows_params': windows_params

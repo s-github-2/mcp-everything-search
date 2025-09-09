@@ -49,6 +49,18 @@ Examples:
 }
 ```
 
+You can also send an MCP-style envelope where the parameters are wrapped in a "base" key:
+
+```json
+{
+  "base": {
+    "query": "*.py",
+    "max_results": 50,
+    "sort_by": 6
+  }
+}
+```
+
 ```json
 {
   "query": "ext:py datemodified:today",
